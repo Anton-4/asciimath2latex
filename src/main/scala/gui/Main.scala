@@ -66,7 +66,7 @@ object Main extends JFXApp {
 
   private def genTexImg(texText: String): WritableImage = {
     val tex = new TeXFormula("\\begin{align}" + texText + "\\end{align}")
-    val awtImage = tex.createBufferedImage(TeXConstants.STYLE_TEXT, 26, java.awt.Color.BLACK, null)
+    val awtImage = tex.createBufferedImage(TeXConstants.STYLE_DISPLAY, 26, java.awt.Color.BLACK, null)
     val fxImage = SwingFXUtils.toFXImage(awtImage.asInstanceOf[BufferedImage], null)
     fxImage
   }

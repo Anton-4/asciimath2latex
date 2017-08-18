@@ -2,17 +2,27 @@ package parser
 
 trait AsciiMathTree {
 
-  abstract class Token{
+  abstract class Latexable{
     def toLatex(): String
   }
 
-  case class Equation(tokens: List[Token]){
+  abstract class Token extends Latexable{
+    def toLatex(): String
+  }
+
+  case class Expression(parts: List[Latexable]) extends Latexable{
     def toLatex(): String = {
-      tokens.map(tok => tok.toLatex()).mkString(" ")
+      parts.map(part => part.toLatex()).mkString(" ")
     }
   }
 
-  case class Document(equations: List[Equation]){
+  /*case class Expression(tokens:){
+    def toLatex(): String = {
+      tokens.map(tok => tok.toLatex()).mkString(" ")
+    }
+  }*/
+
+  case class Document(equations: List[Expression]){
     def toLatex(): String = {
       equations.map(equation => equation.toLatex()).mkString(" \\\\\n")
     }
@@ -68,18 +78,20 @@ trait AsciiMathTree {
   case object BigXi extends GreekLtr
   case object Zeta extends GreekLtr
 
-  abstract class MathOp extends Token{
+  abstract class Operator extends Token
+
+  abstract class MathOp extends Operator{
     def toLatex(): String
   }
 
-  case class UnderOver(under:Option[Token] = None, over:Option[Token] = None) extends MathOp {
+  case class UnderOver(under:Option[Expression] = None, over:Option[Expression] = None) extends MathOp {
     override def toLatex() = {
       "" + optionToString(under, isUnder = true) + optionToString(over, isUnder = false)
     }
 
-    def optionToString(token: Option[Token], isUnder: Boolean): String = {
-      token match {
-        case Some(tok) => if (isUnder) "_" + tok.toLatex() else "^" + tok.toLatex()
+    def optionToString(exp: Option[Expression], isUnder: Boolean): String = {
+      exp match {
+        case Some(tok) => if (isUnder) "_{" + tok.toLatex() + "}" else "^{" + tok.toLatex() + "}"
         case None => ""
       }
     }
@@ -95,6 +107,9 @@ trait AsciiMathTree {
 
   case object Plus extends MathOp{
     override def toLatex() = "+"
+  }
+  case object Equals extends MathOp{
+    override def toLatex() = "="
   }
   case object Minus extends MathOp{
     override def toLatex() = "-"
@@ -175,14 +190,236 @@ trait AsciiMathTree {
     override def toLatex() = "\\bigcup" + underOver.toLatex()
   }
 
+  //for symbols that are the same in asciimath and latex
+  case class Misc(str: String, underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA) {
+    override def toLatex(): String = str + underOver.toLatex()
+  }
 
-  abstract class RelOp
+  abstract class RelOp extends Operator
 
-  abstract class LogSymbol
+  case object NotEq extends RelOp{
+    override def toLatex(): String = "\\ne"
+  }
+  case object Define extends RelOp{
+    override def toLatex(): String = ":="
+  }
+  case object Low extends RelOp{
+    override def toLatex(): String = "\\lt"
+  }
+  case object LowEq extends RelOp{
+    override def toLatex(): String = "\\leq"
+  }
+  case object Great extends RelOp{
+    override def toLatex(): String = "\\gt"
+  }
+  case object GreatEq extends RelOp{
+    override def toLatex(): String = "\\geq"
+  }
+  case object Prec extends RelOp{
+    override def toLatex(): String = "\\prec"
+  }
+  case object Succ extends RelOp{
+    override def toLatex(): String = "\\succ"
+  }
+  case object PrecEq extends RelOp{
+    override def toLatex(): String = "\\preceq"
+  }
+  case object SuccEq extends RelOp{
+    override def toLatex(): String = "\\succeq"
+  }
+  case object In extends RelOp{
+    override def toLatex(): String = "\\in"
+  }
+  case object NotIn extends RelOp{
+    override def toLatex(): String = "\\notin"
+  }
+  case object Subset extends RelOp{
+    override def toLatex(): String = "\\subset"
+  }
+  case object Supset extends RelOp{
+    override def toLatex(): String = "\\supset"
+  }
+  case object Equiv extends RelOp{
+    override def toLatex(): String = "\\equiv"
+  }
+  case object Cong extends RelOp{
+    override def toLatex(): String = "\\cong"
+  }
+  case object Approx extends RelOp{
+    override def toLatex(): String = "\\approx"
+  }
+  case object Propto extends RelOp{
+    override def toLatex(): String = "\\propto"
+  }
 
-  abstract class Bracket
 
-  abstract class Misc
+  abstract class LogOp extends Operator
+
+  case object And extends LogOp{
+    override def toLatex(): String = "\\and"
+  }
+  case object Or extends LogOp{
+    override def toLatex(): String = "\\or"
+  }
+  case object Not extends LogOp{
+    override def toLatex(): String = "\\neg"
+  }
+  case object Implies extends LogOp{
+    override def toLatex(): String = "\\implies"
+  }
+  case object If extends LogOp{
+    override def toLatex(): String = "\\if"
+  }
+  case object Iff extends LogOp{
+    override def toLatex(): String = "\\iff"
+  }
+  case object Forall extends LogOp{
+    override def toLatex(): String = "\\forall"
+  }
+  case object Exists extends LogOp{
+    override def toLatex(): String = "\\exists"
+  }
+  case object Bot extends LogOp{
+    override def toLatex(): String = "\\bot"
+  }
+  case object Top extends LogOp{
+    override def toLatex(): String = "\\top"
+  }
+  case object Vdash extends LogOp{
+    override def toLatex(): String = "\\vdash"
+  }
+  case object Models extends LogOp{
+    override def toLatex(): String = "\\models"
+  }
+
+
+  abstract class Bracket extends Token
+
+  case object LAngle extends Bracket{
+    override def toLatex(): String = "\\langle"
+  }
+
+  case object RAngle extends Bracket{
+    override def toLatex(): String = "\\rangle"
+  }
+
+  abstract class MiscSymbols extends Token
+
+  case class Variable(str: String, underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = str + underOver.toLatex()
+  }
+  case class Number(str: String, underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = str + underOver.toLatex()
+  }
+  case class Integral(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\int" + underOver.toLatex()
+  }
+  case object DerX extends MiscSymbols{
+    override def toLatex(): String = "dx"
+  }
+  case object DerY extends MiscSymbols{
+    override def toLatex(): String = "dy"
+  }
+  case object DerZ extends MiscSymbols{
+    override def toLatex(): String = "dz"
+  }
+  case object DerT extends MiscSymbols{
+    override def toLatex(): String = "dt"
+  }
+  case class OIntegral(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\oint"
+  }
+  case object Partial extends MiscSymbols{
+    override def toLatex(): String = "\\partial"
+  }
+  case object Nabla extends MiscSymbols{
+    override def toLatex(): String = "\\nabla"
+  }
+  case object PlusMin extends MiscSymbols{
+    override def toLatex(): String = "\\pm"
+  }
+  case object EmptySet extends MiscSymbols{
+    override def toLatex(): String = "\\emptyset"
+  }
+  case object Infty extends MiscSymbols{
+    override def toLatex(): String = "\\infty"
+  }
+  case object Aleph extends MiscSymbols{
+    override def toLatex(): String = "\\aleph"
+  }
+  case object LDots extends MiscSymbols{
+    override def toLatex(): String = "\\ldots"
+  }
+  case object Therefore extends MiscSymbols{
+    override def toLatex(): String = "\\therefore"
+  }
+  case object Because extends MiscSymbols{
+    override def toLatex(): String = "\\because"
+  }
+  case object Angle extends MiscSymbols{
+    override def toLatex(): String = "\\angle"
+  }
+  case object Triangle extends MiscSymbols{
+    override def toLatex(): String = "\\triangle"
+  }
+  case object Prime extends MiscSymbols{
+    override def toLatex(): String = "\\prime"
+  }
+  case object Tilde extends MiscSymbols{
+    override def toLatex(): String = "\\tilde"
+  }
+  case object Frown extends MiscSymbols{
+    override def toLatex(): String = "\\frown"
+  }
+  case object Quad extends MiscSymbols{
+    override def toLatex(): String = "\\quad"
+  }
+  case object QQuad extends MiscSymbols{
+    override def toLatex(): String = "\\qquad"
+  }
+  case object CDots extends MiscSymbols{
+    override def toLatex(): String = "\\cdots"
+  }
+  case object VDots extends MiscSymbols{
+    override def toLatex(): String = "\\vdots"
+  }
+  case object DDots extends MiscSymbols{
+    override def toLatex(): String = "\\ddots"
+  }
+  case object Diamond extends MiscSymbols{
+    override def toLatex(): String = "\\diamond"
+  }
+  case object Square extends MiscSymbols{
+    override def toLatex(): String = "\\square"
+  }
+  case object LFloor extends MiscSymbols{
+    override def toLatex(): String = "\\lfloor"
+  }
+  case object RFloor extends MiscSymbols{
+    override def toLatex(): String = "\\rfloor"
+  }
+  case object LCeiling extends MiscSymbols{
+    override def toLatex(): String = "\\lceiling"
+  }
+  case object Rceiling extends MiscSymbols{
+    override def toLatex(): String = "\\rceiing"
+  }
+  case class Complex(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\mathbb{C}" + underOver.toLatex()
+  }
+  case class Natural(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\mathbb{N}" + underOver.toLatex()
+  }
+  case class Rational(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\mathbb{Q}" + underOver.toLatex()
+  }
+  case class Real(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\mathbb{R}" + underOver.toLatex()
+  }
+  case class IntColl(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
+    override def toLatex(): String = "\\mathbb{Z}" + underOver.toLatex()
+  }
+
 
   abstract class Func
 
