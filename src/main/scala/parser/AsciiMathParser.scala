@@ -3,10 +3,11 @@ package parser
 import scala.util.parsing.combinator.RegexParsers
 
 object AsciiMathParser extends RegexParsers with AsciiMathTree{
+  
 
-  def elem: Parser[Elem] = {
+  def token: Parser[Token] = {
 
-    ".+".r ^^{
+    "[^\\s_^]+".r ^^{
       case  "alpha" => Alpha
       case  "beta" => Beta
       case  "chi" => Chi
@@ -60,29 +61,29 @@ object AsciiMathParser extends RegexParsers with AsciiMathTree{
       case "o+" => OPlus
       case "ox" => OTimes
       case "o." => ODot
-      case "sum" => Sum
-      case "prod" => Prod
+      case "sum" => Sum()
+      case "prod" => Prod()
       case "^^" => Wedge
-      case "^^^" => BigWedge
+      case "^^^" => BigWedge()
       case "vv" => Vee
-      case "vvv" => BigVee
+      case "vvv" => BigVee()
       case "nn" => Cap
-      case "nnn" => BigCap
+      case "nnn" => BigCap()
       case "uu" => Cup
-      case "uuu" => BigCap
+      case "uuu" => BigCap()
 
     }
   }
 
-  def under: Parser[UnderOver] = "_" ~ elem ^^ {case _~a => UnderOver(under = Some(a))}
-  def over: Parser[UnderOver] = "^" ~ elem ^^ {case _~a => UnderOver(over = Some(a))}
+  def under: Parser[UnderOver] = "_" ~ token ^^ {case _~a => UnderOver(under = Some(a))}
+  def over: Parser[UnderOver] = "^" ~ token ^^ {case _~a => UnderOver(over = Some(a))}
 
   def overOrUnder: Parser[UnderOver] = (under | over) ^^ {
     case a => a
   }
-  def underOverElem: Parser[Elem] = elem ~ (overOrUnder?) ~ (overOrUnder?) ^^ {
-    case (expr:HasUnderOver) ~ None ~ None => expr
-    case (expr:HasUnderOver) ~ Some(ovrUndr) => {
+  def underOverToken: Parser[Token] = token ~ (overOrUnder?) ~ (overOrUnder?) ^^ {
+    case (expr:Token) ~ None ~ None => expr
+    case (expr:HasUnderOver) ~ Some(ovrUndr) ~ None => {
       expr.underOver = ovrUndr
       expr
     }
@@ -95,7 +96,7 @@ object AsciiMathParser extends RegexParsers with AsciiMathTree{
   override val whiteSpace = """[ \t]+""".r
 
   def eol: Parser[Any] = sys.props("line.separator")
-  def equation: Parser[Equation] = (elem | underOverElem).+ ~ eol.* ^^ {case ltrs~_ => Equation(ltrs)}
+  def equation: Parser[Equation] = (underOverToken).+ ~ eol.* ^^ {case ltrs~_ => Equation(ltrs)}
 
   def document: Parser[Document] = equation.+ ^^ {case equations => Document(equations)}
 

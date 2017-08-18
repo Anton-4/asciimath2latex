@@ -2,11 +2,11 @@ package parser
 
 trait AsciiMathTree {
 
-  abstract class Elem{
+  abstract class Token{
     def toLatex(): String
   }
 
-  case class Equation(tokens: List[Elem]){
+  case class Equation(tokens: List[Token]){
     def toLatex(): String = {
       tokens.map(tok => tok.toLatex()).mkString(" ")
     }
@@ -18,7 +18,7 @@ trait AsciiMathTree {
     }
   }
 
-  abstract class GreekLtr extends Elem{
+  abstract class GreekLtr extends Token{
     override def toLatex() : String = {
       val Big = "^Big([a-zA-Z]+).*".r
 
@@ -68,13 +68,20 @@ trait AsciiMathTree {
   case object BigXi extends GreekLtr
   case object Zeta extends GreekLtr
 
-  abstract class MathOp extends Elem{
+  abstract class MathOp extends Token{
     def toLatex(): String
   }
 
-  case class UnderOver(under:Option[Elem] = None, over:Option[Elem] = None) extends MathOp {
+  case class UnderOver(under:Option[Token] = None, over:Option[Token] = None) extends MathOp {
     override def toLatex() = {
-      " " + under.map(_.toLatex()) + over.map(_.toLatex())
+      "" + optionToString(under, isUnder = true) + optionToString(over, isUnder = false)
+    }
+
+    def optionToString(token: Option[Token], isUnder: Boolean): String = {
+      token match {
+        case Some(tok) => if (isUnder) "_" + tok.toLatex() else "^" + tok.toLatex()
+        case None => ""
+      }
     }
 
     def combine(underOver: UnderOver): UnderOver = {
@@ -84,7 +91,7 @@ trait AsciiMathTree {
     }
   }
 
-  abstract case class HasUnderOver(var underOver: UnderOver) extends MathOp
+  abstract class HasUnderOver(var underOver: UnderOver) extends MathOp
 
   case object Plus extends MathOp{
     override def toLatex() = "+"
@@ -137,34 +144,34 @@ trait AsciiMathTree {
   case object ODot extends MathOp{
     override def toLatex() = "\\odot"
   }
-  case class Sum(override var underOver: UnderOver) extends HasUnderOver(underOver){
+  case class Sum(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
     override def toLatex() = "\\sum" + underOver.toLatex()
   }
-  case class Prod(override var underOver: UnderOver) extends HasUnderOver(underOver){
+  case class Prod(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
     override def toLatex() = "\\prod" + underOver.toLatex()
   }
   case object Wedge extends MathOp{
     override def toLatex() = "\\wedge"
   }
-  case class BigWedge(override var underOver: UnderOver) extends HasUnderOver(underOver){
+  case class BigWedge(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
     override def toLatex() = "\\bigwedge" + underOver.toLatex()
   }
   case object Vee extends MathOp{
     override def toLatex() = "\\vee"
   }
-  case class BigVee(override var underOver: UnderOver) extends HasUnderOver(underOver){
+  case class BigVee(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
     override def toLatex() = "\\bigvee" + underOver.toLatex()
   }
   case object Cap extends MathOp{
     override def toLatex() = "\\cap"
   }
-  case class BigCap(override var underOver: UnderOver) extends HasUnderOver(underOver){
+  case class BigCap(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
     override def toLatex() = "\\bigcap" + underOver.toLatex()
   }
   case object Cup extends MathOp{
     override def toLatex() = "\\cup"
   }
-  case class BigCup(override var underOver: UnderOver) extends HasUnderOver(underOver){
+  case class BigCup(underOverA: UnderOver = UnderOver()) extends HasUnderOver(underOverA){
     override def toLatex() = "\\bigcup" + underOver.toLatex()
   }
 
