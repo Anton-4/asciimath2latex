@@ -3,9 +3,9 @@ package parser
 import scala.util.parsing.combinator.RegexParsers
 
 object AsciiMathParser extends RegexParsers with AsciiMathTree{
-  
 
-  def token: Parser[Token] = {
+
+  def token = {
     val variable = "([A-Za-z]+)".r
     val num = "(\\d+(\\.\\d+)?)".r
 
@@ -46,6 +46,24 @@ object AsciiMathParser extends RegexParsers with AsciiMathTree{
       case  "xi" => Xi
       case  "Xi" => BigXi
       case  "zeta" => Zeta
+      case "=" => Equals
+      case "+" => Plus
+      case "-" => Minus
+      case "*" => Times
+      case "**" => Asterix
+      case "***" => Star
+      case "/" => Slash
+      case "\\\\" => Backslash
+      case "setminus" => SetMinus
+      case "xx" => XTimes
+      case "|><" => LTimes
+      case "><|" => RTimes
+      case "|><|" => Bowtie
+      case "-:" => Div
+      case "@" => At
+      case "o+" => OPlus
+      case "ox" => OTimes
+      case "o." => ODot
       case "sum" => Sum()
       case "prod" => Prod()
       case "^^" => Wedge
@@ -126,30 +144,8 @@ object AsciiMathParser extends RegexParsers with AsciiMathTree{
       case "ZZ" => IntColl()
       case variable(v) => Variable(v)
       case num(n) => Number(n)
-      case miscStr => Misc(miscStr)
-    }
-  }
-
-  def operator : Parser[Operator] = {
-    """[TODO]+""".r ^^ {
-      case "=" => Equals
-      case "+" => Plus
-      case "-" => Minus
-      case "*" => Times
-      case "**" => Asterix
-      case "***" => Star
-      case "/" => Slash
-      case "\\\\" => Backslash
-      case "setminus" => SetMinus
-      case "xx" => XTimes
-      case "|><" => LTimes
-      case "><|" => RTimes
-      case "|><|" => Bowtie
-      case "-:" => Div
-      case "@" => At
-      case "o+" => OPlus
-      case "ox" => OTimes
-      case "o." => ODot
+      case _ => failure("illegal sequence of symbols")
+      //case miscStr => Misc(miscStr)
     }
   }
 
@@ -176,7 +172,7 @@ object AsciiMathParser extends RegexParsers with AsciiMathTree{
     }
   }
 
-  override val whiteSpace = [ \t]+""".r
+  //override val whiteSpace = """[ \t]+""".r
 
   def apply(input: String): Document = parseAll(document, input) match {
     case Success(result, _) => result
