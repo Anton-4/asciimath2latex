@@ -13,10 +13,33 @@ class ParserSpec extends FlatSpec with Matchers {
     AsciiMathParser(input).toLatex() shouldBe ("\\omega \\lambda \\alpha \\\\\n\\beta \\Omega")
   }*/
 
-  "parser" should "parse symbols without spaces correctly" in {
-    val Parsed.Success(value, successIndex) = TempParser.equation.parse("+oo")
+  private def parse(input: String): String = {
+    val Parsed.Success(value, successIndex) = TempParser.equation.parse(input)
+    value
+  }
 
-    value shouldBe "+\\infty"
+  "parser" should "parse numbers correctly" in {
+      parse("123") shouldBe "123"
+  }
+
+  "parser" should "parse powers correctly" in {
+    parse("1^2^3^4^5") shouldBe "1^{2^{3^{4^{5}}}}"
+  }
+
+  "parser" should "parse symbols without spaces correctly" in {
+    parse("oo+") shouldBe "\\infty+"
+  }
+
+  "parser" should "parse simple equations correctly" in {
+    parse("2=1+1") shouldBe "2=1+1"
+    parse("2 = 1+1") shouldBe "2=1+1"
+    parse("2+2-    2 = 1+1") shouldBe "2+2-2=1+1"
+    parse("2*2 = 4") shouldBe "2\\cdot2=4"
+  }
+
+  "parser" should "parse greek letters correctly" in {
+    parse("alpha") shouldBe "\\alpha"
+    parse("alpha beta") shouldBe "\\alpha\\beta"
   }
 
   /*"parser" should "parse sums correctly" in {
