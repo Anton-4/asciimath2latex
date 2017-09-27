@@ -2,31 +2,21 @@ package parser
 
 import fastparse.all._
 import fastparse.core.Parsed
-import parser.symbols.{GreekLtrMap, SymbolMap}
+import parser.symbols.{GreekLtrMap, OpMap, SymbolMap}
 
 import scala.collection.mutable
 
 
 object TempParser{
 
-  def genSymbolParser(symbolMap: SymbolMap): Parser[String] = {
+  private def genSymbolParser(symbolMap: SymbolMap): Parser[String] = {
     val symMap = symbolMap.getMap()
     P(StringIn(symbolMap.keySeq():_*).!).map(symMap(_))
   }
 
+  val operator = genSymbolParser(OpMap)
 
-
-  val lookupMap = mutable.Map("oo" -> "\\infty","+-" -> "\\pm")
-  val keySeq = lookupMap.keys.toSeq
-  val symbol: Parser[String] = P(StringIn(keySeq:_*).!).map(lookupMap(_))
-
-  val lookupMapOps = mutable.Map("+" -> "+","-" -> "-","=" -> "=", "*" -> "\\cdot")
-  val keySeqOps = lookupMapOps.keys.toSeq
-  val operator: Parser[String] = P(StringIn(keySeqOps:_*).!).map(lookupMapOps(_))
-
-  val greekMap = GreekLtrMap.greekMap
-  val keySeqGreek = greekMap.keys.toSeq
-  val greekLtr: Parser[String] = P(StringIn(keySeqGreek:_*).!).map(greekMap(_))
+  val greekLtr = genSymbolParser(GreekLtrMap)
 
   val digits = "0123456789"
   val digit: Parser[String] = P( CharIn(digits).rep.!)
@@ -41,7 +31,7 @@ object TempParser{
 
   val whitespace = P(" ").map(_ => "")
 
-  val all: Parser[String] = P(symbol | operator | greekLtr | sub | sup | number | whitespace)
+  val all: Parser[String] = P(operator | greekLtr | sub | sup | number | whitespace)
   val sub: Parser[String] = P("_" ~ all.rep()).map(x => "_{" + x.mkString("") + "}")
   val sup: Parser[String] = P("^" ~ all.rep()).map(x => "^{" + x.mkString("") + "}")
 
