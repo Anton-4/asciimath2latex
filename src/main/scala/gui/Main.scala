@@ -3,7 +3,7 @@ package gui
 import java.awt.image.BufferedImage
 
 import org.scilab.forge.jlatexmath.{TeXConstants, TeXFormula}
-import parser.{AsciiMathParser, TempParser}
+import parser.{AsciiMathParserOld, AsciiMathParser}
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
@@ -41,7 +41,7 @@ object Main extends JFXApp {
   imageView.image = genTexImg("LateX")
 
   btnToLatex.onAction = (event: ActionEvent) => {
-    val latex = TempParser.parse(editorArea.getText)
+    val latex = AsciiMathParser.parse(editorArea.getText)
     imageView.image = genTexImg(latex)
     latexTextView.text = latex
   }

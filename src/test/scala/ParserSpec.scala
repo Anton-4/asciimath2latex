@@ -2,8 +2,8 @@ import fastparse.core.Parsed
 
 import collection.mutable.Stack
 import org.scalatest._
+import parser.AsciiMathParserOld
 import parser.AsciiMathParser
-import parser.TempParser
 import parser.AsciiMathTree
 
 class ParserSpec extends FlatSpec with Matchers {
@@ -14,7 +14,7 @@ class ParserSpec extends FlatSpec with Matchers {
   }*/
 
   private def parse(input: String): String = {
-    val Parsed.Success(value, successIndex) = TempParser.equation.parse(input)
+    val Parsed.Success(value, successIndex) = AsciiMathParser.equation.parse(input)
     value
   }
 
@@ -23,7 +23,7 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   "parser" should "parse powers correctly" in {
-    parse("1^2^3^4^5") shouldBe "1^{2^{3^{4^{5}}}}"
+    parse("1^2^3^4^5") shouldBe "1^2^3^4^5"
   }
 
   "parser" should "parse symbols without spaces correctly" in {
@@ -42,10 +42,24 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("alpha beta") shouldBe "\\alpha\\beta"
   }
 
-  /*"parser" should "parse sums correctly" in {
-    AsciiMathParser("sum").toLatex() shouldBe ("\\sum")
-    AsciiMathParser("sum_alpha").toLatex() shouldBe ("\\sum_{\\alpha}")
-    AsciiMathParser("sum_alpha^beta").toLatex() shouldBe ("\\sum_{\\alpha}^{\\beta}")
-    AsciiMathParser("sum^beta_alpha").toLatex() shouldBe ("\\sum_{\\alpha}^{\\beta}")
-  }*/
+  "parser" should "parse sums correctly" in {
+    parse("sum") shouldBe "\\sum"
+    parse("sum_alpha") shouldBe "\\sum_\\alpha"
+    parse("sum_alpha^beta") shouldBe "\\sum_\\alpha^\\beta"
+  }
+
+  "parser" should "parse fractions correctly" in {
+    parse("1/5") shouldBe "\\frac{1}{5}"
+    parse("{1}/{5}") shouldBe "\\frac{1}{5}"
+    parse("{1+2}/3") shouldBe "\\frac{1+2}{3}"
+    parse("1/{2+3}") shouldBe "\\frac{1}{2+3}"
+  }
+
+  "parser" should "parse regular text correctly" in {
+    parse("@hello@") shouldBe "\\text{hello}"
+  }
+
+  "parser" should "parse variables correctly" in {
+    parse("N") shouldBe "N"
+  }
 }

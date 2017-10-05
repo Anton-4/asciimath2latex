@@ -1,182 +1,68 @@
 package parser
 
-import scala.util.parsing.combinator.RegexParsers
+import fastparse.all._
+import fastparse.core.Parsed
+import parser.symbols._
 
-object AsciiMathParser extends RegexParsers with AsciiMathTree{
+import scala.collection.mutable
 
 
-  def token = {
-    val variable = "([A-Za-z]+)".r
-    val num = "(\\d+(\\.\\d+)?)".r
+object AsciiMathParser{
 
-    "[^\\s_^]+".r ^^{
-      case  "alpha" => Alpha
-      case  "beta" => Beta
-      case  "chi" => Chi
-      case  "delta" => Delta
-      case  "Delta" => BigDelta
-      case  "epsi" => Epsi
-      case  "varepsilon" => Varepsilon
-      case  "eta" => Eta
-      case  "gamma" => Gamma
-      case  "Gamma" => BigGamma
-      case  "iota" => Iota
-      case  "kappa" => Kappa
-      case  "lambda" => Lambda
-      case  "Lambda" => BigLambda
-      case  "mu" => Mu
-      case  "nu" => Nu
-      case  "omega" => Omega
-      case  "Omega" => BigOmega
-      case  "phi" => Phi
-      case  "varphi" => Varphi
-      case  "Phi" => BigPhi
-      case  "pi" => Pi
-      case  "Pi" => BigPi
-      case  "psi" => Psi
-      case  "Psi" => BigPsi
-      case  "rho" => Rho
-      case  "sigma" => Sigma
-      case  "Sigma" => BigSigma
-      case  "tau" => Tau
-      case  "theta" => Theta
-      case  "vartheta" => Vartheta
-      case  "Theta" => BigTheta
-      case  "upsilon" => Upsilon
-      case  "xi" => Xi
-      case  "Xi" => BigXi
-      case  "zeta" => Zeta
-      case "=" => Equals
-      case "+" => Plus
-      case "-" => Minus
-      case "*" => Times
-      case "**" => Asterix
-      case "***" => Star
-      case "/" => Slash
-      case "\\\\" => Backslash
-      case "setminus" => SetMinus
-      case "xx" => XTimes
-      case "|><" => LTimes
-      case "><|" => RTimes
-      case "|><|" => Bowtie
-      case "-:" => Div
-      case "@" => At
-      case "o+" => OPlus
-      case "ox" => OTimes
-      case "o." => ODot
-      case "sum" => Sum()
-      case "prod" => Prod()
-      case "^^" => Wedge
-      case "^^^" => BigWedge()
-      case "vv" => Vee
-      case "vvv" => BigVee()
-      case "nn" => Cap
-      case "nnn" => BigCap()
-      case "uu" => Cup
-      case "uuu" => BigCap()
-      case "!=" => NotEq
-      case ":=" => Define
-      case "lt" => Low
-      case "<=" => LowEq
-      case "gt" => Great
-      case ">=" => GreatEq
-      case "-<" => Prec
-      case ">-" => Succ
-      case "-<=" => PrecEq
-      case ">-=" => SuccEq
-      case "in" => In
-      case "!in" => NotIn
-      case "sub" => Subset
-      case "sup" => Supset
-      case "-=" => Equiv
-      case "~=" => Cong
-      case "~~" => Approx
-      case "prop" => Propto
-      case "and" => And
-      case "or" => Or
-      case "not" => Not
-      case "=>" => Implies
-      case "if" => If
-      case "<=>" => Iff
-      case "AA" => Forall
-      case "EE" => Exists
-      case "_|_" => Bot
-      case "TT" => Top
-      case "|--" => Vdash
-      case "|==" => Models
-      case "(:" => LAngle
-      case ":)" => RAngle
-      case "int" => Integral()
-      case "dx" => DerX
-      case "dy" => DerY
-      case "dz" => DerZ
-      case "dt" => DerT
-      case "oint" => OIntegral()
-      case "del" => Partial
-      case "grad" => Nabla
-      case "+-" => PlusMin
-      case "O/" => EmptySet
-      case "oo" => Infty
-      case "aleph" => Aleph
-      case "..." => LDots
-      case ":." => Therefore
-      case ":'" => Because
-      case "/_" => Angle
-      case "/_\\" => Triangle
-      case "'" => Prime
-      case "tilde" => Tilde
-      case "frown" => Frown
-      case "quad" => Quad
-      case "qquad" => QQuad
-      case "cdots" => CDots
-      case "vdots" => VDots
-      case "ddots" => DDots
-      case "diamond" => Diamond
-      case "square" => Square
-      case "|__" => LFloor
-      case "__|" => RFloor
-      case "|~" => LCeiling
-      case "~|" => Rceiling
-      case "CC" => Complex()
-      case "NN" => Natural()
-      case "QQ" => Rational()
-      case "RR" => Real()
-      case "ZZ" => IntColl()
-      case variable(v) => Variable(v)
-      case num(n) => Number(n)
-      case _ => failure("illegal sequence of symbols")
-      //case miscStr => Misc(miscStr)
-    }
+  private def genSymbolParser(symbolMap: SymbolMap): Parser[String] = {
+    val symMap = symbolMap.getMap()
+    P(StringIn(symbolMap.keySeq():_*).!).map(symMap(_))
   }
 
-  def eol: Parser[Any] = sys.props("line.separator")
-  def expression: Parser[Expression] = (underOverToken).+ ^^ {case ltrs => Expression(ltrs)}
-  def line: Parser[Expression] = expression.+ ~ eol.* ^^ {case expr~_ => Expression(expr)}
-  def document: Parser[Document] = line.+ ^^ {case lines => Document(lines)}
+  val greekLtr = genSymbolParser(GreekLtrMap)
+  val operator = genSymbolParser(OpMap)
+  val binRelation = genSymbolParser(RelMap)
+  val logical = genSymbolParser(LogMap)
+  val misc = genSymbolParser(MiscMap)
+  val func = genSymbolParser(FunMap)
+  val arrows = genSymbolParser(ArrowMap)
 
-  def under: Parser[UnderOver] = "_" ~ expression ^^ {case _~a => UnderOver(under = Some(a))}
-  def over: Parser[UnderOver] = "^" ~ expression ^^ {case _~a => UnderOver(over = Some(a))}
 
-  def overOrUnder: Parser[UnderOver] = (under | over) ^^ {
-    case a => a
+  val alphabet = 'A' to 'z'
+  val variable: Parser[String] = P(CharsWhileIn(alphabet).!)
+  val digits = "0123456789"
+  val digit: Parser[String] = P( CharIn(digits).rep.!)
+  val decNum: Parser[String] = P( CharsWhileIn(digits).!)
+  val exp = P( CharIn("Ee") ~ CharIn("+-").? ~ decNum )
+  val ffloat: Parser[String] = {
+    def Thing = P( decNum ~ exp.? )
+    def Thing2 = P( "." ~ Thing)
+    P( ("." ~ Thing | decNum ~ Thing2).! )
   }
-  def underOverToken: Parser[Token] = token ~ (overOrUnder?) ~ (overOrUnder?) ^^ {
-    case (tok:Token) ~ None ~ None => tok
-    case (tok:HasUnderOver) ~ Some(ovrUndr) ~ None => {
-      tok.underOver = ovrUndr
-      tok
-    }
-    case (tok:HasUnderOver) ~ Some(ovrUndrA) ~ Some(ovrUndrB) => {
-      tok.underOver = ovrUndrA.combine(ovrUndrB)
-      tok
-    }
-  }
+  val number = P(ffloat | decNum)
 
-  //override val whiteSpace = """[ \t]+""".r
+  val whitespace = P(" ").map(_ => "")
 
-  def apply(input: String): Document = parseAll(document, input) match {
-    case Success(result, _) => result
-    case failure : NoSuccess => scala.sys.error(failure.msg)
+  val all: Parser[String] = P( text | fraction | braceBlock | symbl)
+  val symbl = P( operator | greekLtr | binRelation | logical | misc | func | arrows |
+    sub | sup | number | whitespace | variable)
+  val sub: Parser[String] = P("_" ~ all.rep()).map(x => "_" + x.mkString(""))
+  val sup: Parser[String] = P("^" ~ all.rep()).map(x => "^" + x.mkString(""))
+
+  val curlyBlock = P("{" ~ all.rep() ~ "}").map(x => "{" + x.mkString("") + "}")
+  val roundBlock = P("(" ~ all.rep() ~ ")").map(x => "(" + x.mkString("") + ")")
+  val squareBlock = P("[" ~ all.rep() ~ "]").map(x => "[" + x.mkString("") + "]")
+  val braceBlock = curlyBlock | roundBlock | squareBlock
+
+
+  val bracedFraction = P(curlyBlock ~ "/" ~ curlyBlock).map({case (nume, divi) => s"\\frac$nume$divi"} )
+  val mixedFractionA = P(curlyBlock ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac$nume{$divi}"} )
+  val mixedFractionB = P(symbl ~ "/" ~ curlyBlock).map({case (nume, divi) => s"\\frac{$nume}$divi"} )
+  val simpleFraction = P(symbl ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac{$nume}{$divi}"} )
+  val fraction = bracedFraction | mixedFractionA | mixedFractionB | simpleFraction
+
+  val text = P("@" ~ CharsWhile(c => c != '@').! ~ "@").map(x => "\\text{" + x + "}")
+
+  val equation = all.rep.map(_.mkString(""))
+
+  def parse(input: String): String = {
+    val Parsed.Success(value, successIndex) = AsciiMathParser.equation.parse(input)
+    value
   }
 
 }
