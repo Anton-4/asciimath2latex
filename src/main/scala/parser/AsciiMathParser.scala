@@ -37,26 +37,30 @@ object AsciiMathParser{
   val number = P(ffloat | decNum)
 
   val whitespace = P(" ").map(_ => "")
+  val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\")
 
-  val all: Parser[String] = P( text | fraction | braceBlock | symbl)
+  val all: Parser[String] = P( text | align | fraction | braceBlock | symbl)
   val symbl = P( operator | greekLtr | binRelation | logical | misc | func | arrows |
-    sub | sup | number | whitespace | variable)
-  val sub: Parser[String] = P("_" ~ all.rep()).map(x => "_" + x.mkString(""))
-  val sup: Parser[String] = P("^" ~ all.rep()).map(x => "^" + x.mkString(""))
+    sub | sup | number | whitespace | variable | newline)
+  val sub: Parser[String] = P("_" ~ all).map(x => "_{" + x.mkString("") + "}")
+  val sup: Parser[String] = P("^" ~ all).map(x => "^{" + x.mkString("") + "}")
 
   val curlyBlock = P("{" ~ all.rep() ~ "}").map(x => "{" + x.mkString("") + "}")
   val roundBlock = P("(" ~ all.rep() ~ ")").map(x => "(" + x.mkString("") + ")")
+  val roundToCurlyBlock = P("(" ~ all.rep() ~ ")").map(x => "{" + x.mkString("") + "}")
   val squareBlock = P("[" ~ all.rep() ~ "]").map(x => "[" + x.mkString("") + "]")
   val braceBlock = curlyBlock | roundBlock | squareBlock
 
-
-  val bracedFraction = P(curlyBlock ~ "/" ~ curlyBlock).map({case (nume, divi) => s"\\frac$nume$divi"} )
-  val mixedFractionA = P(curlyBlock ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac$nume{$divi}"} )
-  val mixedFractionB = P(symbl ~ "/" ~ curlyBlock).map({case (nume, divi) => s"\\frac{$nume}$divi"} )
+  val bracedFraction = P(roundToCurlyBlock ~ "/" ~ roundToCurlyBlock).map({case (nume, divi) => s"\\frac$nume$divi"} )
+  val mixedFractionA = P(roundToCurlyBlock ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac$nume{$divi}"} )
+  val mixedFractionB = P(symbl ~ "/" ~ roundToCurlyBlock).map({case (nume, divi) => s"\\frac{$nume}$divi"} )
   val simpleFraction = P(symbl ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac{$nume}{$divi}"} )
   val fraction = bracedFraction | mixedFractionA | mixedFractionB | simpleFraction
 
   val text = P("@" ~ CharsWhile(c => c != '@').! ~ "@").map(x => "\\text{" + x + "}")
+
+
+  val align = P("eq" ~ all.rep() ~ "endeq").map({case (x) => "\\begin{align*} " + x.mkString("") + "\\end{align*} "})
 
   val equation = all.rep.map(_.mkString(""))
 

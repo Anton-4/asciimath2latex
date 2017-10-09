@@ -35,7 +35,9 @@ object FunMap extends SymbolMap {
     "lub" -> "\\lub",
     "glb" -> "\\glb",
     "min" -> "\\min",
-    "max" -> "\\max"
+    "max" -> "\\max",
+    "cal" -> "\\mathcal",
+    "til" -> "\\widetilde"
   )
 
   override def getMap(): Map[String, String] = funMap

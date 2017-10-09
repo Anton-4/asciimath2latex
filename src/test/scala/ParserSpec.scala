@@ -23,7 +23,7 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   "parser" should "parse powers correctly" in {
-    parse("1^2^3^4^5") shouldBe "1^2^3^4^5"
+    parse("1^2^3^4^5") shouldBe "1^{2}^{3}^{4}^{5}"
   }
 
   "parser" should "parse symbols without spaces correctly" in {
@@ -34,7 +34,7 @@ class ParserSpec extends FlatSpec with Matchers {
     parse("2=1+1") shouldBe "2=1+1"
     parse("2 = 1+1") shouldBe "2=1+1"
     parse("2+2-    2 = 1+1") shouldBe "2+2-2=1+1"
-    parse("2*2 = 4") shouldBe "2\\cdot2=4"
+    parse("2*2 = 4") shouldBe "2\\cdot 2=4"
   }
 
   "parser" should "parse greek letters correctly" in {
@@ -44,15 +44,15 @@ class ParserSpec extends FlatSpec with Matchers {
 
   "parser" should "parse sums correctly" in {
     parse("sum") shouldBe "\\sum"
-    parse("sum_alpha") shouldBe "\\sum_\\alpha"
-    parse("sum_alpha^beta") shouldBe "\\sum_\\alpha^\\beta"
+    parse("sum_alpha") shouldBe "\\sum_{\\alpha}"
+    parse("sum_alpha^beta") shouldBe "\\sum_{\\alpha}^{\\beta}"
   }
 
   "parser" should "parse fractions correctly" in {
     parse("1/5") shouldBe "\\frac{1}{5}"
-    parse("{1}/{5}") shouldBe "\\frac{1}{5}"
-    parse("{1+2}/3") shouldBe "\\frac{1+2}{3}"
-    parse("1/{2+3}") shouldBe "\\frac{1}{2+3}"
+    parse("(1)/(5)") shouldBe "\\frac{1}{5}"
+    parse("(1+2)/3") shouldBe "\\frac{1+2}{3}"
+    parse("1/(2+3)") shouldBe "\\frac{1}{2+3}"
   }
 
   "parser" should "parse regular text correctly" in {
@@ -61,5 +61,9 @@ class ParserSpec extends FlatSpec with Matchers {
 
   "parser" should "parse variables correctly" in {
     parse("N") shouldBe "N"
+  }
+
+  "parser" should "parse equations correctly" in {
+    parse("eq5endeq") shouldBe "\\begin{align*} 5\\end{align*} "
   }
 }
