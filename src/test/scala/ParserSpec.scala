@@ -64,6 +64,6 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   "parser" should "parse equations correctly" in {
-    parse("eq5endeq") shouldBe "\\begin{align*} 5\\end{align*} "
+    parse("eq5 = 4 + 1\n=3 + 2\nendeq") shouldBe "\\begin{align} 5=4+1\\\\=3+2\\\\\\end{align} "
   }
 }

@@ -24,7 +24,7 @@ object AsciiMathParser{
 
 
   val alphabet = 'A' to 'z'
-  val variable: Parser[String] = P(CharsWhileIn(alphabet).!)
+  val variable: Parser[String] = P(!"endeq" ~ CharsWhileIn(alphabet).!)
   val digits = "0123456789"
   val digit: Parser[String] = P( CharIn(digits).rep.!)
   val decNum: Parser[String] = P( CharsWhileIn(digits).!)
@@ -60,7 +60,7 @@ object AsciiMathParser{
   val text = P("@" ~ CharsWhile(c => c != '@').! ~ "@").map(x => "\\text{" + x + "}")
 
 
-  val align = P("eq" ~ all.rep() ~ "endeq").map({case (x) => "\\begin{align*} " + x.mkString("") + "\\end{align*} "})
+  val align = P("eq" ~ all.rep() ~ "endeq").map({case (x) => "\\begin{align} " + x.mkString("") + "\\end{align} "})
 
   val equation = all.rep.map(_.mkString(""))
 
