@@ -3,13 +3,14 @@ package gui
 import java.awt.image.BufferedImage
 
 import org.scilab.forge.jlatexmath.{TeXConstants, TeXFormula}
-import parser.{AsciiMathParserOld, AsciiMathParser}
+import parser.{AsciiMathParser, AsciiMathParserOld}
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.embed.swing.SwingFXUtils
 import scalafx.event.ActionEvent
+import scalafx.geometry.Orientation
 import scalafx.scene.{Group, Scene}
 import scalafx.scene.control.{Button, _}
 import scalafx.scene.image.{ImageView, WritableImage}
@@ -18,18 +19,15 @@ import scalafx.scene.paint.Color._
 
 object Main extends JFXApp {
 
-  val windowWidth = 500
-  val windowHeight = 500
-
   lazy val editorArea = new TextArea {
     prefColumnCount = 40
-    prefRowCount = 20
+    prefRowCount = 30
   }
 
   lazy val latexTextView = new TextArea {
     editable = false
     prefColumnCount = 40
-    prefRowCount = 20
+    prefRowCount = 30
   }
 
   val btnToLatex = new Button {
@@ -46,12 +44,19 @@ object Main extends JFXApp {
     latexTextView.text = latex
   }
 
-  val rootPane = new Group
-  rootPane.children = List(editorArea)
 
+  val hboxDim = 700
+  val box = new HBox{
+    children = imageView
+    minHeight = hboxDim
+    minWidth = hboxDim
+    maxHeight = hboxDim
+    maxWidth = hboxDim
+  }
 
   val flowPane = new FlowPane {
-    children = List(editorArea, imageView, latexTextView, btnToLatex)
+    orientation = Orientation.Vertical;
+    children = List(editorArea, box, latexTextView, btnToLatex)
   }
 
   stage = new PrimaryStage {

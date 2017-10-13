@@ -6,6 +6,7 @@ object OpMap extends SymbolMap{
     "+" -> "+",
     "-" -> "-",
     "=" -> "=",
+    "&=" -> "&=",
     "*" -> "\\cdot ",
     "**"->"\\ast",
     "***"->"\\star",

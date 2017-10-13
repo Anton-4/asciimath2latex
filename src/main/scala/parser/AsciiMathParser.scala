@@ -23,7 +23,7 @@ object AsciiMathParser{
   val arrows = genSymbolParser(ArrowMap)
 
 
-  val alphabet = 'A' to 'z'
+  val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,:"
   val variable: Parser[String] = P(!"endeq" ~ CharsWhileIn(alphabet).!)
   val digits = "0123456789"
   val digit: Parser[String] = P( CharIn(digits).rep.!)
@@ -37,7 +37,7 @@ object AsciiMathParser{
   val number = P(ffloat | decNum)
 
   val whitespace = P(" ").map(_ => "")
-  val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\")
+  val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\\n")
 
   val all: Parser[String] = P( text | align | fraction | braceBlock | symbl)
   val symbl = P( operator | greekLtr | binRelation | logical | misc | func | arrows |
@@ -46,10 +46,11 @@ object AsciiMathParser{
   val sup: Parser[String] = P("^" ~ all).map(x => "^{" + x.mkString("") + "}")
 
   val curlyBlock = P("{" ~ all.rep() ~ "}").map(x => "{" + x.mkString("") + "}")
-  val roundBlock = P("(" ~ all.rep() ~ ")").map(x => "(" + x.mkString("") + ")")
+  val litCurlyBlock = P("\\{" ~ all.rep() ~ "\\}").map(x => "\\{" + x.mkString("") + "\\}")
+  val roundBlock = P("(" ~ all.rep() ~ ")").map(x => "\\left(" + x.mkString("") + "\\right)")
   val roundToCurlyBlock = P("(" ~ all.rep() ~ ")").map(x => "{" + x.mkString("") + "}")
-  val squareBlock = P("[" ~ all.rep() ~ "]").map(x => "[" + x.mkString("") + "]")
-  val braceBlock = curlyBlock | roundBlock | squareBlock
+  val squareBlock = P("[" ~ all.rep() ~ "]").map(x => "\\left[" + x.mkString("") + "\\right]")
+  val braceBlock = curlyBlock | litCurlyBlock | roundBlock | squareBlock
 
   val bracedFraction = P(roundToCurlyBlock ~ "/" ~ roundToCurlyBlock).map({case (nume, divi) => s"\\frac$nume$divi"} )
   val mixedFractionA = P(roundToCurlyBlock ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac$nume{$divi}"} )
