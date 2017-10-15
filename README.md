@@ -8,6 +8,9 @@ check http://asciimath.org/ to get an overview of all symbols
 Expect quite a few bugs.
 I have deviated from the ascii math standard in some places according to my own preferences.
 
+## executing
+navigate to editor_scala folder, run with `sbt run`
+
 ## purpose
 
 With the asciimath editor you can type math quickly while maintaing readability!
