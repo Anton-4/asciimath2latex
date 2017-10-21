@@ -4,10 +4,6 @@ object MiscMap extends SymbolMap {
 
   val miscMap = Map(
   "int" -> "\\int",
-  "dx" -> "\\dx",
-  "dy" -> "\\dy",
-  "dz" -> "\\dz",
-  "dt" -> "\\dt",
   "oint" -> "\\oint",
   "del" -> "\\partial",
   "grad" -> "\\nabla",

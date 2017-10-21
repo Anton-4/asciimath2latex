@@ -23,7 +23,7 @@ object AsciiMathParser{
   val arrows = genSymbolParser(ArrowMap)
 
 
-  val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,:"
+  val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,:|"
   val variable: Parser[String] = P(!"endeq" ~ CharsWhileIn(alphabet).!)
   val digits = "0123456789"
   val digit: Parser[String] = P( CharIn(digits).rep.!)
@@ -40,7 +40,7 @@ object AsciiMathParser{
   val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\\n")
 
   val all: Parser[String] = P( text | align | fraction | braceBlock | symbl)
-  val symbl = P( operator | greekLtr | binRelation | logical | misc | func | arrows |
+  val symbl = P( operator | greekLtr | misc | binRelation | logical | func | arrows |
     sub | sup | number | whitespace | variable | newline)
   val sub: Parser[String] = P("_" ~ all).map(x => "_{" + x.mkString("") + "}")
   val sup: Parser[String] = P("^" ~ all).map(x => "^{" + x.mkString("") + "}")
