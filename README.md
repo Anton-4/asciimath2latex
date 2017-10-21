@@ -1,9 +1,15 @@
 # asciimath_editor
-primitive asciimath editor, can export to latex 
+primitive asciimath editor, can export to latex
+
+## syntax
+check http://asciimath.org/ to get an overview of all symbols
 
 ## disclosure
 Expect quite a few bugs.
 I have deviated from the ascii math standard in some places according to my own preferences.
+
+## executing
+navigate to editor_scala folder, run with `sbt run`
 
 ## purpose
 
@@ -55,5 +61,4 @@ E\left[\frac{A}{B}\right]&=\sum_{{a\in A}}\sum_{{b\in B}}\frac{a}{b}Pr\left[A=a,
 ## TODO
 - create an atom plugin with scalajs
 - convert to regular Latex instead of MathJax Latex
-
 
