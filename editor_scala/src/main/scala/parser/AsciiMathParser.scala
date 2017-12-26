@@ -21,7 +21,7 @@ object AsciiMathParser{
   val misc = genSymbolParser(MiscMap)
   val func = genSymbolParser(FunMap)
   val arrows = genSymbolParser(ArrowMap)
-
+  val header = genSymbolParser(HeaderMap)
 
   val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,:|"
   val variable: Parser[String] = P(!"endeq" ~ CharsWhileIn(alphabet).!)
@@ -39,8 +39,8 @@ object AsciiMathParser{
   val whitespace = P(" ").map(_ => "")
   val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\\n")
 
-  val all: Parser[String] = P( text | align | fraction | braceBlock | symbl)
-  val symbl = P( operator | greekLtr | misc | binRelation | logical | func | arrows |
+  val all: Parser[String] = P( newline | align | fraction | braceBlock | symbl)
+  val symbl = P( operator | greekLtr | func | misc | binRelation | logical | arrows |
     sub | sup | number | whitespace | variable | newline)
   val sub: Parser[String] = P("_" ~ all).map(x => "_{" + x.mkString("") + "}")
   val sup: Parser[String] = P("^" ~ all).map(x => "^{" + x.mkString("") + "}")
@@ -58,12 +58,22 @@ object AsciiMathParser{
   val simpleFraction = P(symbl ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac{$nume}{$divi}"} )
   val fraction = bracedFraction | mixedFractionA | mixedFractionB | simpleFraction
 
-  val text = P("@" ~ CharsWhile(c => c != '@').! ~ "@").map(x => "\\text{" + x + "}")
+  val text = P(CharsWhile(c => c != '$' && c != '\n').!).map(x => x)
+  val textToCurly = P(CharsWhile(c => c != '\n').!).map(x => "{" + x + "}")
+  val textNewLine = P( StringIn("\r\n", "\n") ).map(_ => "\n")
+  val inlineMath = P("$" ~ all.rep() ~ "$").map(x => "$" + x.mkString("") + "$")
 
-
-  val align = P("eq" ~ all.rep() ~ "endeq").map({case (x) => "\\begin{align} " + x.mkString("") + "\\end{align} "})
-
-  val equation = all.rep.map(_.mkString(""))
+  val align = P("eq" ~ textNewLine ~ all.rep() ~ "endeq").map({
+    case (_,b) => {
+      val midStr = b.mkString("").dropRight(3) + "\n"
+      "\\begin{align*}\n" + midStr + "\\end{align*}"
+    }
+  })
+  val section = P(header ~ text).map({
+    case (h, t) => h + "{ " + t + " }"
+  })
+  val topAll = P(section | inlineMath | align | text | textNewLine)
+  val equation = topAll.rep.map(_.mkString(""))
 
   def parse(input: String): String = {
     val Parsed.Success(value, successIndex) = AsciiMathParser.equation.parse(input)

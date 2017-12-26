@@ -34,7 +34,7 @@ object MiscMap extends SymbolMap {
   "NN" -> "\\mathbb{N}",
   "QQ" -> "\\mathbb{Q}",
   "RR" -> "\\mathbb{R}",
-  "ZZ" -> "\\mathbb{Z}",
+  "ZZ" -> "\\mathbb{Z}"
   )
 
   override def getMap(): Map[String, String] = miscMap

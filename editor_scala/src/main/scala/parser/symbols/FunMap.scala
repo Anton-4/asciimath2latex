@@ -38,6 +38,7 @@ object FunMap extends SymbolMap {
     "max" -> "\\max",
     "cal" -> "\\mathcal",
     "bf"  -> "\\mathbf",
+    "se"  -> "\\subsubsection",
     "til" -> "\\widetilde"
   )
 
