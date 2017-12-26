@@ -29,7 +29,7 @@ E[B] != 0
 $
 
 $
-E[A/B] &= sum_{a in A} sum_{b in B} a/b Pr[A=a, B = b]
+E[A/B] &= sum_{a in A} sum_{b in B} a/b Pr[A=a, B = b]  @ joint of independent vars
 &= sum_{a in A} sum_{b in B} a/b Pr[A=a]*Pr[B = b]
 $
 
@@ -54,7 +54,7 @@ E\left[B\right]\ne 0
 \end{align*}
 
 \begin{align*}
-E\left[\frac{A}{B}\right]&=\sum_{{a\in A}}\sum_{{b\in B}}\frac{a}{b}Pr\left[A=a,B=b\right]\\
+E\left[\frac{A}{B}\right]&=\sum_{{a\in A}}\sum_{{b\in B}}\frac{a}{b}Pr\left[A=a,B=b\right]&& \text{ joint of independent vars}\\
 &=\sum_{{a\in A}}\sum_{{b\in B}}\frac{a}{b}Pr\left[A=a\right]\cdot Pr\left[B=b\right]
 \end{align*}
 

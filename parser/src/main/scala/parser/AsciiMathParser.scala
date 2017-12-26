@@ -39,7 +39,7 @@ object AsciiMathParser{
   val whitespace = P(" ").map(_ => "")
   val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\\n")
 
-  val all: Parser[String] = P( newline | align | fraction | braceBlock | symbl)
+  val all: Parser[String] = P( newline | annotate | align | fraction | braceBlock | symbl)
   val symbl = P( operator | greekLtr | func | misc | binRelation | logical | arrows |
     sub | sup | number | whitespace | variable | newline)
   val sub: Parser[String] = P("_" ~ all).map(x => "_{" + x.mkString("") + "}")
@@ -69,6 +69,8 @@ object AsciiMathParser{
       "\\begin{align*}\n" + midStr + "\\end{align*}"
     }
   })
+  val annotate = P("@" ~ (inlineMath | text).rep).map(x => "&& \\text{" + x.mkString("") + "}")
+
   val section = P(header ~ text).map({
     case (h, t) => h + "{ " + t + " }"
   })
