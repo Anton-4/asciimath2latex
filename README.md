@@ -9,7 +9,7 @@ Expect some bugs.
 I have deviated from the ascii-math standard in some places according to my own preferences.
 
 ## executing
-navigate to scala folder, put input in `src/main/resources/input.fastm`,
+navigate to the parser folder, put input in `src/main/resources/input.fastm`,
 output will be in `output.tex`, run with `sbt run`.
 
 ## purpose
@@ -22,20 +22,20 @@ ascii-math code:
 
 to prove or disprove: $E[A/B] = (E[A])/(E[B])$
 
-eq
+$
 A: A sub ZZ
 B: B sub ZZ\\ \{0\}
 E[B] != 0
-endeq
+$
 
-eq
+$
 E[A/B] &= sum_{a in A} sum_{b in B} a/b Pr[A=a, B = b]
 &= sum_{a in A} sum_{b in B} a/b Pr[A=a]*Pr[B = b]
-endeq
+$
 
-eq
+$
 (E[A])/(E[B]) = (sum_{a in A} a*Pr[A=a])/(sum_{b in B} b*Pr[B=b])
-endeq
+$
 
 the above equations are clearly not equal
 

@@ -63,7 +63,7 @@ object AsciiMathParser{
   val textNewLine = P( StringIn("\r\n", "\n") ).map(_ => "\n")
   val inlineMath = P("$" ~ all.rep() ~ "$").map(x => "$" + x.mkString("") + "$")
 
-  val align = P("eq" ~ textNewLine ~ all.rep() ~ "endeq").map({
+  val align = P("$" ~ textNewLine ~ all.rep() ~ "$").map({
     case (_,b) => {
       val midStr = b.mkString("").dropRight(3) + "\n"
       "\\begin{align*}\n" + midStr + "\\end{align*}"
@@ -72,7 +72,7 @@ object AsciiMathParser{
   val section = P(header ~ text).map({
     case (h, t) => h + "{ " + t + " }"
   })
-  val topAll = P(section | inlineMath | align | text | textNewLine)
+  val topAll = P(section | align | inlineMath | text | textNewLine)
   val equation = topAll.rep.map(_.mkString(""))
 
   def parse(input: String): String = {

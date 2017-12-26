@@ -1,0 +1,20 @@
+\subsubsection*{  3 }
+
+to prove or disprove: $E\left[\frac{A}{B}\right]=\frac{E\left[A\right]}{E\left[B\right]}$
+
+\begin{align*}
+A:A\subset \mathbb{Z}\\
+B:B\subset \mathbb{Z}\backslash\{0\}\\
+E\left[B\right]\ne 0
+\end{align*}
+
+\begin{align*}
+E\left[\frac{A}{B}\right]&=\sum_{{a\in A}}\sum_{{b\in B}}\frac{a}{b}Pr\left[A=a,B=b\right]\\
+&=\sum_{{a\in A}}\sum_{{b\in B}}\frac{a}{b}Pr\left[A=a\right]\cdot Pr\left[B=b\right]
+\end{align*}
+
+\begin{align*}
+\frac{E\left[A\right]}{E\left[B\right]}=\frac{\sum_{{a\in A}}a\cdot Pr\left[A=a\right]}{\sum_{{b\in B}}b\cdot Pr\left[B=b\right]}
+\end{align*}
+
+the above equations are clearly not equal
