@@ -7,11 +7,11 @@ object RelMap extends SymbolMap{
   val relMap = Map(
      "!=" -> "\\ne ",
      ":=" -> ":= ",
-     "<" -> "\\lt ",
+     "<" -> "< ",
      "lt" -> "\\lt ",
      "<=" -> "\\le ",
      "gt" -> "\\gt ",
-     ">" -> "\\gt ",
+     ">" -> "> ",
      ">=" -> "\\ge ",
      "-<" -> "\\prec ",
      ">-" -> "\\succ ",

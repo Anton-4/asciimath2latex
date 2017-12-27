@@ -1,20 +1,5 @@
-### 3
+| a | b | c |
+| 0 | 1 | 2 |
+| 3 | 4 | 5 |
 
-to prove or disprove: $E[A/B] = (E[A])/(E[B])$
 
-$
-A: A sub ZZ
-B: B sub ZZ\\ \{0\}
-E[B] != 0
-$
-
-$
-E[A/B] &= sum_{a in A} sum_{b in B} a/b Pr[A=a, B = b]  @ joint of independent vars
-&= sum_{a in A} sum_{b in B} a/b Pr[A=a]*Pr[B = b]
-$
-
-$
-(E[A])/(E[B]) = (sum_{a in A} a*Pr[A=a])/(sum_{b in B} b*Pr[B=b])
-$
-
-the above equations are clearly not equal

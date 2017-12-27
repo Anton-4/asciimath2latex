@@ -12,6 +12,8 @@ object MiscMap extends SymbolMap {
   "oo" -> "\\infty",
   "aleph" -> "\\aleph",
   "..." -> "\\ldots",
+  "?" -> "?",
+  "&" -> "&",
   ":." -> "\\therefore",
   ":'" -> "\\because",
   "/_" -> "\\angle",

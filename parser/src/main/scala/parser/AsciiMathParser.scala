@@ -39,7 +39,7 @@ object AsciiMathParser{
   val whitespace = P(" ").map(_ => "")
   val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\\n")
 
-  val all: Parser[String] = P( newline | annotate | align | fraction | braceBlock | symbl)
+  val all: Parser[String] = P(annotate | fraction | piecewise | braceBlock | symbl)
   val symbl = P( operator | greekLtr | func | misc | binRelation | logical | arrows |
     sub | sup | number | whitespace | variable | newline)
   val sub: Parser[String] = P("_" ~ all).map(x => "_{" + x.mkString("") + "}")
@@ -58,23 +58,75 @@ object AsciiMathParser{
   val simpleFraction = P(symbl ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac{$nume}{$divi}"} )
   val fraction = bracedFraction | mixedFractionA | mixedFractionB | simpleFraction
 
-  val text = P(CharsWhile(c => c != '$' && c != '\n').!).map(x => x)
+  val text = P(CharsWhile(c => c != '$' && c != '\n').!).map { x =>
+    val boldRep = x.replaceAll("\\*\\*([^\\*]*)\\*\\*", "\\\\textbf{$1}")
+    boldRep.replaceAll(">", "\\\\textgreater ").replaceAll("<", "\\\\textless ")
+  }
+
   val textToCurly = P(CharsWhile(c => c != '\n').!).map(x => "{" + x + "}")
   val textNewLine = P( StringIn("\r\n", "\n") ).map(_ => "\n")
   val inlineMath = P("$" ~ all.rep() ~ "$").map(x => "$" + x.mkString("") + "$")
 
   val align = P("$" ~ textNewLine ~ all.rep() ~ "$").map({
     case (_,b) => {
-      val midStr = b.mkString("").dropRight(3) + "\n"
+      var firstEq = true
+      val withAlign = for (exp <- b) yield {
+        if (exp.contains("=")) {
+
+          var retStr = ""
+          val bracesOpen = List('{','[')
+          val bracesClose = List(']','}')
+          val bracesStack = mutable.Stack[Char]()
+          for (i <- 0 until exp.length){
+            if( bracesOpen.contains(exp(i)) ){
+              bracesStack.push(exp(i))
+              retStr += exp(i)
+            }else if( bracesClose.contains(exp(i)) ){
+              bracesStack.pop()
+              retStr += exp(i)
+            }else if(exp(i) == '=' && bracesStack.isEmpty && firstEq){
+                firstEq = false
+                retStr += "&="
+            }else{
+              retStr += exp(i)
+            }
+          }
+          if (exp.contains("\\\\")){
+            firstEq = true
+          }
+          retStr
+        } else{
+          if (exp.contains("\\\\")){
+            firstEq = true
+          }
+          exp
+        }
+      }
+      val midStr = withAlign.mkString("").dropRight(3) + "\n"
       "\\begin{align*}\n" + midStr + "\\end{align*}"
     }
   })
-  val annotate = P("@" ~ (inlineMath | text).rep).map(x => "&& \\text{" + x.mkString("") + "}")
+
+  val piecewise = P("pw{" ~ textNewLine ~ all.rep() ~ "}").map({
+    case (_,b) => "\\begin{cases}" + b.mkString("") + "\\end{cases}"
+  })
+  val annotate = P("@" ~ (inlineMath | text).rep).map(x => "&& \\text{- " + x.mkString("") + " -}")
 
   val section = P(header ~ text).map({
-    case (h, t) => h + "{ " + t + " }"
+    case (h, t) => h + "{" + t + " }"
   })
-  val topAll = P(section | align | inlineMath | text | textNewLine)
+
+  val tableCell = P("|" ~ (CharsWhile(c => c != '|' && c !='\n') ~ &("|")).!).map(x => x)
+  val tableLine = P(tableCell.rep(min = 1) ~ "|").map(x => x.mkString("&"))
+  val table = P((tableLine ~ textNewLine).rep(min = 1)).map{
+    x => {
+      "\\begin{table}\n\\centering\n\\begin{tabular}\n" +
+      x.map(tup => tup._1).mkString("\\\\\n") +
+      "\n\\end{tabular}\n\\end{table}\n"
+    }
+  }
+
+  val topAll = P(section | align | inlineMath | table | text | textNewLine)
   val equation = topAll.rep.map(_.mkString(""))
 
   def parse(input: String): String = {
