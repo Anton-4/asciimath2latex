@@ -40,7 +40,7 @@ object AsciiMathParser{
   val newline = P( StringIn("\r\n", "\n") ).map(_ => "\\\\\n")
 
   val all: Parser[String] = P(annotate | fraction | piecewise | braceBlock | symbl)
-  val symbl = P( operator | greekLtr | func | misc | binRelation | logical | arrows |
+  val symbl = P( logical | operator | greekLtr | func | binRelation | misc | arrows |
     sub | sup | number | whitespace | variable | newline)
   val sub: Parser[String] = P("_" ~ all).map(x => "_{" + x.mkString("") + "}")
   val sup: Parser[String] = P("^" ~ all).map(x => "^{" + x.mkString("") + "}")
@@ -52,15 +52,20 @@ object AsciiMathParser{
   val squareBlock = P("[" ~ all.rep() ~ "]").map(x => "\\left[" + x.mkString("") + "\\right]")
   val braceBlock = curlyBlock | litCurlyBlock | roundBlock | squareBlock
 
-  val bracedFraction = P(roundToCurlyBlock ~ "/" ~ roundToCurlyBlock).map({case (nume, divi) => s"\\frac$nume$divi"} )
-  val mixedFractionA = P(roundToCurlyBlock ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac$nume{$divi}"} )
-  val mixedFractionB = P(symbl ~ "/" ~ roundToCurlyBlock).map({case (nume, divi) => s"\\frac{$nume}$divi"} )
-  val simpleFraction = P(symbl ~ "/" ~ symbl).map({case (nume, divi) => s"\\frac{$nume}{$divi}"} )
+  val divider = P(whitespace.rep ~ "/" ~ whitespace.rep)
+  val bracedFraction = P(roundToCurlyBlock ~ divider ~ roundToCurlyBlock).map({case (nume,_, divi) => s"\\frac$nume$divi"} )
+  val mixedFractionA = P(roundToCurlyBlock ~ divider ~ symbl).map({case (nume,_, divi) => s"\\frac$nume{$divi}"} )
+  val mixedFractionB = P(symbl ~ divider ~ roundToCurlyBlock).map({case (nume,_, divi) => s"\\frac{$nume}$divi"} )
+  val simpleFraction = P(symbl ~ divider ~ symbl).map({case (nume,_, divi) => s"\\frac{$nume}{$divi}"} )
   val fraction = bracedFraction | mixedFractionA | mixedFractionB | simpleFraction
 
   val text = P(CharsWhile(c => c != '$' && c != '\n').!).map { x =>
     val boldRep = x.replaceAll("\\*\\*([^\\*]*)\\*\\*", "\\\\textbf{$1}")
-    boldRep.replaceAll(">", "\\\\textgreater ").replaceAll("<", "\\\\textless ")
+    val arrowRep = boldRep.replaceAll("->","\\$\\\\rightarrow\\$")
+                          .replaceAll("=>","\\$\\\\implies\\$")
+                          .replaceAll("%","\\%")
+    arrowRep.replaceAll(">", "\\\\textgreater ").replaceAll("<", "\\\\textless ")
+
   }
 
   val textToCurly = P(CharsWhile(c => c != '\n').!).map(x => "{" + x + "}")
@@ -108,7 +113,7 @@ object AsciiMathParser{
   })
 
   val piecewise = P("pw{" ~ textNewLine ~ all.rep() ~ "}").map({
-    case (_,b) => "\\begin{cases}" + b.mkString("") + "\\end{cases}"
+    case (_,b) => "\\begin{cases}\n" + b.mkString("") + "\\end{cases}"
   })
   val annotate = P("@" ~ (inlineMath | text).rep).map(x => "&& \\text{- " + x.mkString("") + " -}")
 
@@ -117,16 +122,29 @@ object AsciiMathParser{
   })
 
   val tableCell = P("|" ~ (CharsWhile(c => c != '|' && c !='\n') ~ &("|")).!).map(x => x)
-  val tableLine = P(tableCell.rep(min = 1) ~ "|").map(x => x.mkString("&"))
-  val table = P((tableLine ~ textNewLine).rep(min = 1)).map{
+  val dashLine = P("|" ~ ("-".rep(min = 1) ~ "|").rep(min = 1) ~ textNewLine).map(_ => "\\hline")
+  val tableLine = P(tableCell.rep(min = 1) ~ "|" ~ textNewLine).map(x => x._1.mkString("&") + "\\\\")
+  val table = P((dashLine | tableLine).rep(min = 1)).map{
     x => {
-      "\\begin{table}\n\\centering\n\\begin{tabular}\n" +
-      x.map(tup => tup._1).mkString("\\\\\n") +
+      var tabular = "|"
+      val nrSeps = x.head.count(_ == '&') + 1
+      for (_ <- 0 until nrSeps){
+        tabular += "l|"
+      }
+      "\\begin{table}[H]\n\\centering\n\\begin{tabular}{" + tabular + "}\n" +
+      x.mkString("\n") +
       "\n\\end{tabular}\n\\end{table}\n"
     }
   }
 
-  val topAll = P(section | align | inlineMath | table | text | textNewLine)
+  val listItem = P(CharIn(List('-','+')) ~ (text | inlineMath).rep(min = 1)).map(x => "\\item " + x.mkString(""))
+  val list = P((listItem ~ textNewLine).rep(min=1)).map{ x =>
+    "\\begin{itemize}\n" +
+      x.map(tup => tup._1).mkString("\n") +
+    "\n\\end{itemize}\n"
+  }
+
+  val topAll = P(section | align | list | inlineMath | table | text | textNewLine)
   val equation = topAll.rep.map(_.mkString(""))
 
   def parse(input: String): String = {

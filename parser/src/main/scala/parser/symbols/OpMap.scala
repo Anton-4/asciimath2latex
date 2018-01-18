@@ -3,13 +3,15 @@ package parser.symbols
 object OpMap extends SymbolMap{
 
   val opMap = Map(
+    "+-" -> "\\pm ",
     "+" -> "+",
     "-" -> "-",
     "=" -> "=",
     "&=" -> "&=",
-    "*" -> "\\cdot ",
-    "**"->"\\ast ",
+    "\\*" -> "*",
     "***"->"\\star ",
+    "**"->"\\ast ",
+    "*" -> "\\cdot ",
     "//"->"\\//",
     "\\\\"->"\\backslash ",
     "setminus"->"\\setminus ",
@@ -24,6 +26,7 @@ object OpMap extends SymbolMap{
     "ox"->"\\otimes ",
     "o."->"\\odot ",
     "sum"->"\\sum ",
+    "sqrt"->"\\sqrt ",
     "prod"->"\\prod ",
     "^^"->"\\wedge ",
     "^^^"->"\\bigwedge ",

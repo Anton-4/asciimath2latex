@@ -1,5 +1,16 @@
-| a | b | c |
-| 0 | 1 | 2 |
-| 3 | 4 | 5 |
-
-
+### a)
+condition on whether customers arrive during vacation or not
+$
+E[z^{S_{k+1}^D}] = E[z^{S_{k+1}^D}| S_{k=0}]Pr[S_{k < 0}] + E[z^{S_{k+1}^D}|S_{k!=0}]Pr[S_k != 0]
+$
+G = nr customers arriving during server vacation after serving customer
+$
+E[z^G] = int_0^oo E[z^G | S_{k+1}^D = t] v(t) dt
+G(z) = V^{**}(lambda(1-z))
+$
+$
+G(z) = E[z^G | G > 0](1-P[G=0]) + E[z^G | G = 0]P[G=0]
+E[z^G | G > 0] = (G(z)-E[z^0]P[G=0])/(1-P[G=0])
+= (G(z)-1*G(0))/(1-G(0))
+= (V^{**}(lambda(1-z)) - V^{**}(lambda))/(1-V^{**}(lambda))
+$

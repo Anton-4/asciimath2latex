@@ -5,7 +5,7 @@ import parser.symbols.OpMap.opMap
 object RelMap extends SymbolMap{
 
   val relMap = Map(
-     "!=" -> "\\ne ",
+     "!=" -> "\\neq ",
      ":=" -> ":= ",
      "<" -> "< ",
      "lt" -> "\\lt ",
@@ -24,6 +24,7 @@ object RelMap extends SymbolMap{
      "-=" -> "\\equiv ",
      "~=" -> "\\cong ",
      "~~" -> "\\approx ",
+     "~" -> "\\sim ",
      "prop" -> "\\propto "
   )
 
